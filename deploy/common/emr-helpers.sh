@@ -56,7 +56,7 @@ function deploy_cluster {
             --name "Spark cluster" --use-default-roles --applications Name=Spark \
             --release-label $emr_version \
             --ec2-attributes KeyName="$SSH_KEY_NAME" \
-            --configurations $SOURCE_DIR/spark.json \
+            --configurations "file://$SOURCE_DIR/spark.json" \
             --instance-type $instance_type --instance-count $num_instances \
         > "$deploy_dir/create-cluster.json"
     clusterid="$(discover_clusterid "$deploy_dir")"
