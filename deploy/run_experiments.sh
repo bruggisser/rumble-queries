@@ -100,11 +100,6 @@ run_one 1000 $QUERY_VERSION/query-1 1 yes
 
 # Run the warmups
 NUM_EVENTS=($(for l in 0; do echo $((2**$l*1000)); done))
-QUERY_IDS=($(for q in 1 2 3; do echo $QUERY_VERSION/query-$q; done))
-run_many NUM_EVENTS QUERY_IDS no
-
-# Run the warmups
-NUM_EVENTS=($(for l in 0; do echo $((2**$l*1000)); done))
 QUERY_IDS=($(for q in 1 2 3 4 5 6-1 7 8; do echo $QUERY_VERSION/query-$q; done))
 run_many NUM_EVENTS QUERY_IDS no
 
