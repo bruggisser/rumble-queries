@@ -37,15 +37,7 @@ def main(args):
 	except Exception as e:
 		print("(STAGES) Error: ", e)
 
-	# Get the SQL executions
-	try: 
-		sql_jobs = sorted(json.loads(
-			requests.get(f"{base_url}/sql?length=100000000").text), 
-			key=lambda job: job["id"])[-args.sql_entry_count:] \
-			if args.sql_entry_count != 0 else []
-		jsons.append(("sql_jobs.json", sql_jobs))
-	except Exception as e:
-		print("(SQL_JOBS) Error: ", e)
+	jsons.append(("sql_jobs.json", []))
 
 	# Write the stats
 	for i in jsons:
