@@ -145,7 +145,7 @@ declare function hep:PxPyPzE-to-PtEtaPhiM($particle){
         then 0.0
         else atan2($particle.y, $particle.x)
   let $mass := sqrt($e2 - $z2 - $y2 - $x2)
-  return annotated type hep-types:PtEtaPhiM {
+  return annotate type hep-types:PtEtaPhiM {
     {"pt": $pt, "eta": $eta, "phi": $phi, "mass": $mass}
   }
 };
