@@ -2,9 +2,9 @@
 
 SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 # v0 for original, v1 for SINH, COSH
-QUERY_VERSION=v0
+QUERY_VERSION=v1
 # optimizations: function inlinining, comparison rewriting, dead code detection, native FLWOR clauses
-OPTIMIZATIONS=n,n,n,n,n
+OPTIMIZATIONS=y,y,y,y,y
 
 # Get the parameters
 PORT_OFFSET=${1:-0}  # Useful when running multiple clusters in parallel
@@ -71,7 +71,7 @@ function run_one {(
 		echo $exit_code > "$run_dir"/exit_code.log
 	) 2>&1 | tee "$run_dir"/run.log
 	echo "collecting data..."
-	sleep 4 # wait for metrics
+	sleep 1 # wait for metrics
 	if [ "$warmup" != "yes" ]; then
 		entries=$(( $(curl "http://localhost:${stat_port}/api/v1/applications/${application_id}/jobs" | jq length) - $entries ))
 		python3 get_metrics.py ${application_id} ${entries} 0 ${run_dir} --port=${stat_port}
@@ -98,16 +98,24 @@ function run_many() {(
 )}
 
 # Start up Spark to avoid curl errors
-run_one 1000 $QUERY_VERSION/query-1 1 yes
+#run_one 1000 $QUERY_VERSION/query-1 1 yes
 
-# Run the experiments until SF1
-# Query 6 is discarded at 1000 * 2^8
-NUM_EVENTS=($(for l in {0..8}; do echo $((2**$l*1000)); done))
-QUERY_IDS=($(for q in 1 2 3 4 5 6-1 7 8; do echo $QUERY_VERSION/query-$q; done))
+# warmup
+#for q in 6-1 7 8; do run_one 1000 $QUERY_VERSION/query-$q yes; done
+#
+## Run the experiments until SF1
+#NUM_EVENTS=($(for l in {0..7}; do echo $((2**$l*1000)); done))
+#QUERY_IDS=($(for q in 6-1 7 8; do echo $QUERY_VERSION/query-$q; done))
+#run_many NUM_EVENTS QUERY_IDS no
+
+
+NUM_EVENTS=($(for l in 15 16; do echo $((2**$l*1000)); done))
+QUERY_IDS=($(for q in 8; do echo $QUERY_VERSION/query-$q; done))
 run_many NUM_EVENTS QUERY_IDS no
 
-NUM_EVENTS=($(for l in {9..16}; do echo $((2**$l*1000)); done))
-QUERY_IDS=($(for q in 1 2 3 4 5 7 8; do echo $QUERY_VERSION/query-$q; done))
+# missing queries for experiment_2023-02-28: query 6 with 128k and 256k
+NUM_EVENTS=($(for l in 7 8; do echo $((2**$l*1000)); done))
+QUERY_IDS=($(for q in 6-1; do echo $QUERY_VERSION/query-$q; done))
 run_many NUM_EVENTS QUERY_IDS no
 
 

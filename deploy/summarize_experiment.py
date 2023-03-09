@@ -23,8 +23,10 @@ def aggregate_run(path, save_file_name="metrics.json"):
     with open(os.path.join(path, JOBS), "r") as f:
         jobs = json.load(f)
 
-    with open(os.path.join(path, STAGES), "r") as f:
-        stages = json.load(f)
+    stages = None
+    if os.path.exists(os.path.join(path, STAGES)):
+        with open(os.path.join(path, STAGES), "r") as f:
+            stages = json.load(f)
 
     with open(os.path.join(path, SQL_JOBS), "r") as f:
         sql_jobs = json.load(f)
@@ -60,21 +62,22 @@ def aggregate_run(path, save_file_name="metrics.json"):
     for metric in metrics + deep_metrics:
         summary[metric] = 0
 
-    for stage in stages:
-        for metric in metrics:
-            summary[metric] += stage[metric]
+    if stages is not None:
+        for stage in stages:
+            for metric in metrics:
+                summary[metric] += stage[metric]
 
-        if summary["maxInputRecords"] < stage["inputRecords"] or \
-                (summary["maxInputRecords"] == stage["inputRecords"] and
-                 summary["maxInputRecordsBytes"] < stage["inputBytes"]):
-            summary["maxInputRecords"] = stage["inputRecords"]
-            summary["maxInputRecordsBytes"] = stage["inputBytes"]
+            if summary["maxInputRecords"] < stage["inputRecords"] or \
+                    (summary["maxInputRecords"] == stage["inputRecords"] and
+                     summary["maxInputRecordsBytes"] < stage["inputBytes"]):
+                summary["maxInputRecords"] = stage["inputRecords"]
+                summary["maxInputRecordsBytes"] = stage["inputBytes"]
 
-        for _, task in stage["tasks"].items():
-            summary["bytesRead"] += task.get("taskMetrics", {}).get("inputMetrics", {}).get("bytesRead", 0)
-            summary["recordsRead"] += task.get("taskMetrics", {}).get("inputMetrics", {}).get("recordsRead", 0)
-            summary["bytesWritten"] += task.get("taskMetrics", {}).get("outputMetrics", {}).get("bytesWritten", 0)
-            summary["recordsWritten"] += task.get("taskMetrics", {}).get("outputMetrics", {}).get("recordsWritten", 0)
+            for _, task in stage["tasks"].items():
+                summary["bytesRead"] += task.get("taskMetrics", {}).get("inputMetrics", {}).get("bytesRead", 0)
+                summary["recordsRead"] += task.get("taskMetrics", {}).get("inputMetrics", {}).get("recordsRead", 0)
+                summary["bytesWritten"] += task.get("taskMetrics", {}).get("outputMetrics", {}).get("bytesWritten", 0)
+                summary["recordsWritten"] += task.get("taskMetrics", {}).get("outputMetrics", {}).get("recordsWritten", 0)
 
     # Write and return
     with open(os.path.join(path, save_file_name), "w") as f:
